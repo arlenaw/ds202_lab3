@@ -1,0 +1,86 @@
+---
+title: "Lab 3"
+author: "Arlena Wang"
+date: "9/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+dat <- readxl::read_xls('./GSS.xls')
+dat <- dat%>%
+  rename(year = 'Gss year for this respondent', happiness = 'General happiness', partyid = 'Political party affiliation', income = 'Total family income', sex = 'Respondents sex', education = 'Highest year of school completed', age = 'Age of respondent', marital = 'Marital status', id = 'Respondent id number', ballot = 'Ballot used for interview')
+dat$education <- suppressWarnings(as.numeric(dat$education))
+dat$age <- suppressWarnings(as.numeric(dat$age))
+```
+
+**1.) Find the average years of education for the respondents with each marital status. Arrange your output in a meaningful order and print. Describe any patterns you find.**
+
+```{r}
+dat%>%
+  select(marital, education)%>%
+  filter(education<21)%>%
+  group_by(marital)%>%
+  summarise(education_mean = mean(education), .groups = 'drop')
+```
+
+The range for the average years of education for the respondents with each marital status is from 11.2 to 15.5.  The lowest education mean is the marital status "widowed" and the highest education mean is the marital status with "no answer".  
+
+**2.) Create a single data frame containing records for the better educated respondents with each marital status. A “better educated” respondent is someone who has strictly more years of education than the average among those with the same marital status. Print the structure of the data frame.**
+
+```{r}
+dat%>%
+  select(marital, education)%>%
+  filter(education>16)%>%
+  group_by(marital)
+```
+
+**3.) How is the happiness of a respondent related to his/her marriage status? Define that a person is happy if the response to question is “Very happy” or “Pretty happy”.**
+
+```{r}
+dat%>%
+  select(happiness, marital)%>%
+  filter(happiness %in% c('Very happy', 'Pretty happy', 'Not too happy')) %>%
+  mutate(HappyOrNot = (happiness %in% c('Very happy', 'Pretty happy'))) %>%
+  select(happiness, HappyOrNot, marital)%>%
+  ggplot(aes(x=marital, fill = happiness)) + geom_bar(position = 'fill') + labs(title = "Happiness Vs. Marital Status")
+```
+
+A person is happy if the response to the question is "Very happy" or "Pretty happy" which is shown in the bar chart as green and blue colored.  The color shown in red shows that the person is unhappy.
+The marital status that is the most happy is "married."  The marital status that shows people are the least happy is "separated."  Overall, with all marital statuses, people are mainly green which shows they are happy ("pretty happy").  In addition, there are almost as many people that say they are "very happy" and the least level happiness is "not too happy".
+
+**4.) Does party affiliation affect the relationship you found in the last question?**
+
+```{r}
+dat%>%
+  select(happiness, partyid)%>%
+  filter(happiness %in% c('Very happy', 'Pretty happy', 'Not too happy')) %>%
+  mutate(HappyOrNot = (happiness %in% c('Very happy', 'Pretty happy'))) %>%
+  select(happiness, HappyOrNot, partyid)%>%
+  ggplot(aes(x=partyid, fill = happiness)) + geom_bar(position = 'fill') + labs(title = "Happiness Vs. Party Affiliation") + theme(axis.text.x = element_text(angle = 90))
+```
+
+Yes, party affiliation seems to affect the relationship of happiness.  Since each party affiliation group has different levels of happiness, this shows there is some type of relationship and dependency of happiness on party affiliation.  It seems that no matter what party affiliation the person has, they are mainly happy as the majority of each group is green and blue.  The highest happiness level is "pretty happy," then "very happy," and, lastly, "not too happy."  The group with the highest levels of happiness is "not str republican," so, people who identify as republican  but are not strongly republican.  The group with the lowest happiness level is the group that responds with "Don't know."  This makes sense because there could be a lot of variation within this category.  
+
+**5.) Explore an interesting question (not covered by the previous questions), and answer the question using the GSS data.**
+
+Does sex affect level of happiness?  How does sex predict happiness?
+```{r}
+dat%>%
+  select(happiness, sex)%>%
+  filter(happiness %in% c('Very happy', 'Pretty happy', 'Not too happy')) %>%
+  mutate(HappyOrNot = (happiness %in% c('Very happy', 'Pretty happy'))) %>%
+  select(happiness, HappyOrNot, sex)%>%
+  ggplot(aes(x=sex, fill = happiness)) + geom_bar(position = 'fill') + labs(title = "Happiness Vs. Sex")
+```
+
+No, because the levels of happiness are the almost the same for both sexes, female and male, this shows that sex does not affect the level of happiness.  Both sexes have the same level of happiness if "pretty happy" and "Very happy" are considered "happy" and "not too happy" is considered "unhappy."  Therefore, females and males have the same levels of happiness or unhappiness.  The females column shows that they are slightly more "very happy" and slightly less "pretty happy" than men.  Overall, due to no difference under the conditions, happiness does not depend on Sex.
+
